@@ -16,16 +16,16 @@ def load_and_split(file_path: str):
    
     return chunks
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    chunks = load_and_split(
-        "data/documents/OOPS Notes.pdf"
-    )
+#     chunks = load_and_split(
+#         "data/documents/OOPS Notes.pdf"
+#     )
 
-    print("Number of chunks:", len(chunks))
+#     print("Number of chunks:", len(chunks))
 
-    print("\nFirst chunk:")
-    print(chunks[0].page_content)
+#     print("\nFirst chunk:")
+#     print(chunks[0].page_content)
 
-    print("\nMetadata:")
-    print(chunks[0].metadata)
+#     print("\nMetadata:")
+#     print(chunks[0].metadata)
