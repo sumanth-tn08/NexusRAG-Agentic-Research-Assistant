@@ -12,10 +12,13 @@ def get_rag_prompt():
         
     Do not makeup information
 
-    Context:
+    Conversation history:
+    {history}
+
+    Document Context:
     {context}
 
-    Question:
+    Current Question:
     {question}
 
     Answer:
