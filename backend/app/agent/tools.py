@@ -1,21 +1,38 @@
 from langchain_core.tools import tool
 
-from app.rag.advanced_retriever import advanced_retrieve
+from app.rag.advanced_retriever import (
+    retrieve_from_documents
+)
 
 
 @tool
-def search_documents(question: str) -> str:
+def search_documents(
+    question: str,
+    document_ids: list[str]
+) -> str:
     """
-    Search the uploaded documents and return relevant information.
+    Search selected uploaded documents.
 
-    Use this tool when the user's question should be answered
-    from the uploaded documents.
+    question:
+        User's document-related question.
+
+    document_ids:
+        IDs of the documents that should be searched.
     """
 
-    documents = advanced_retrieve(question)
+    if not document_ids:
+        return "No documents are currently selected."
+
+    documents = retrieve_from_documents(
+        question=question,
+        document_ids=document_ids
+    )
 
     if not documents:
-        return "No relevant information was found in the documents."
+        return (
+            "No relevant information was found "
+            "in the selected documents."
+        )
 
     results = []
 
@@ -23,12 +40,14 @@ def search_documents(question: str) -> str:
 
         source_name = document.metadata.get(
             "filename",
-            document.metadata.get("source", "Unknown")
+            document.metadata.get(
+                "source",
+                "Unknown"
+            )
         )
 
         page = document.metadata.get(
-            "page",
-            None
+            "page"
         )
 
         if page is not None:

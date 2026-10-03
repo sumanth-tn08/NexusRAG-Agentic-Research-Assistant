@@ -1,14 +1,21 @@
-from app.rag.multi_query import multi_query_search
+from app.rag.search import search_by_documents
 from app.rag.reranker import Reranker
 from app.rag.compressor import compress_documents
 
 
-def advanced_retrieve(question: str):
+def retrieve_from_documents(
+    question: str,
+    document_ids: list[str]
+):
+    documents = search_by_documents(
+        question=question,
+        document_ids=document_ids,
+        k=8
+    )
 
-    # Step 1: Multi-query retrieval
-    documents = multi_query_search(question)
+    if not documents:
+        return []
 
-    # Step 2: Reranking
     reranker = Reranker()
 
     documents = reranker.rerank(
@@ -17,7 +24,6 @@ def advanced_retrieve(question: str):
         top_k=5
     )
 
-    # Step 3: Context compression
     documents = compress_documents(
         question,
         documents

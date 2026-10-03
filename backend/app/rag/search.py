@@ -4,8 +4,11 @@ from dotenv import load_dotenv
 from langchain_qdrant import QdrantVectorStore
 
 from app.rag.embeddings import get_embeddings
-from qdrant_client.models import Filter, FieldCondition, MatchValue
-
+from qdrant_client.models import (
+    Filter,
+    FieldCondition,
+    MatchAny
+)
 load_dotenv()
 
 def get_vector_store():
@@ -100,3 +103,29 @@ if __name__ == "__main__":
         print(f"\n--- Result {i} ---")
         print("Page:", document.metadata.get("page"))
         print(document.page_content[:300])
+
+def search_by_documents(
+    question: str,
+    document_ids: list[str],
+    k: int = 6
+):
+    vector_store = get_vector_store()
+
+    qdrant_filter = Filter(
+        must=[
+            FieldCondition(
+                key="metadata.document_id",
+                match=MatchAny(
+                    any=document_ids
+                )
+            )
+        ]
+    )
+
+    documents = vector_store.similarity_search(
+        query=question,
+        k=k,
+        filter=qdrant_filter
+    )
+
+    return documents        

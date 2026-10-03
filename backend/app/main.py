@@ -21,6 +21,7 @@ from app.rag.upload import (
     process_uploaded_file
 )
 
+from app.rag.vector_store import delete_document
 
 app = FastAPI(
     title="NexusRAG API",
@@ -35,6 +36,7 @@ class ChatRequest(BaseModel):
 
     session_id: str = "default"
 
+    document_ids: list[str] = []
 
 class Source(BaseModel):
 
@@ -76,7 +78,8 @@ def chat(
 
     result = run_agent(
         question=request.question,
-        session_id=request.session_id
+        session_id=request.session_id,
+        document_ids=request.document_ids
     )
 
     answer = result["answer"]
@@ -192,3 +195,28 @@ def clear_session(
         "message": "Conversation cleared",
         "session_id": session_id
     }
+    
+@app.delete(
+    "/documents/{document_id}"
+)
+def remove_document(
+    document_id: str
+):
+
+    try:
+
+        delete_document(
+            document_id
+        )
+
+        return {
+            "message": "Document deleted successfully",
+            "document_id": document_id
+        }
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )    

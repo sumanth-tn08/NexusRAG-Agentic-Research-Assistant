@@ -9,16 +9,28 @@ memory = SessionMemory()
 
 def run_agent(
     question: str,
-    session_id: str
+    session_id: str,
+    document_ids: list[str]
 ):
 
     history = memory.get_messages(
         session_id
     )
 
+    agent_question = f"""
+User question:
+{question}
+
+Selected document IDs:
+{document_ids}
+
+When using search_documents, pass exactly these
+document IDs to the document_ids argument.
+"""
+
     messages = history + [
         HumanMessage(
-            content=question
+            content=agent_question
         )
     ]
 
@@ -30,13 +42,10 @@ def run_agent(
 
     final_message = result["messages"][-1]
 
-    # Save only the user question and final answer
     memory.add_messages(
         session_id,
         [
-            HumanMessage(
-                content=question
-            ),
+            HumanMessage(content=question),
             final_message
         ]
     )
