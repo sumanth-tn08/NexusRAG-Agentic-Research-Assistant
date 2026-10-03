@@ -1,9 +1,24 @@
-from fastapi import FastAPI
+import os
+import shutil
+import tempfile
+import uuid
+
+from fastapi import (
+    FastAPI,
+    UploadFile,
+    File,
+    HTTPException
+)
+
 from pydantic import BaseModel
 
 from app.agent.service import (
     run_agent,
     memory
+)
+
+from app.rag.upload import (
+    process_uploaded_file
 )
 
 
@@ -68,7 +83,6 @@ def chat(
 
     sources = []
 
-    # Extract source information from tool messages
     for message in result["messages"]:
 
         if message.type != "tool":
@@ -99,6 +113,68 @@ def chat(
         ],
         session_id=request.session_id
     )
+
+
+@app.post("/upload")
+async def upload_document(
+    file: UploadFile = File(...)
+):
+
+    # Only allow PDF files for now
+    if not file.filename.lower().endswith(".pdf"):
+
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF files are supported."
+        )
+
+    temp_path = None
+
+    try:
+        
+        document_id = str(
+            uuid.uuid4()
+        )
+
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=".pdf"
+        ) as temp_file:
+
+            temp_path = temp_file.name
+
+            shutil.copyfileobj(
+                file.file,
+                temp_file
+            )
+
+        # Process document
+        chunk_count = process_uploaded_file(
+            file_path=temp_path,
+            document_id=document_id,
+            filename=file.filename
+        )
+
+        return {
+            "message": "Document uploaded successfully",
+            "document_id": document_id,
+            "filename": file.filename,
+            "chunks": chunk_count
+        }
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+    finally:
+
+        if temp_path and os.path.exists(temp_path):
+
+            os.remove(temp_path)
 
 
 @app.delete(

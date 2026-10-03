@@ -6,28 +6,36 @@ from langchain_qdrant import QdrantVectorStore
 from app.rag.embeddings import get_embeddings
 from app.rag.ingestion import load_and_split
 
+
 load_dotenv()
 
 
-def create_vector_store(file_path: str):
+COLLECTION_NAME = "nexusrag"
+
+
+def add_document_to_qdrant(
+    file_path: str,
+    document_id: str,
+    filename: str
+):
+
     chunks = load_and_split(file_path)
+
+    # Add application-level metadata
+    for chunk in chunks:
+
+        chunk.metadata["document_id"] = document_id
+        chunk.metadata["filename"] = filename
 
     embeddings = get_embeddings()
 
-    vector_store = QdrantVectorStore.from_documents(
+    QdrantVectorStore.from_documents(
         documents=chunks,
         embedding=embeddings,
         url=os.getenv("QDRANT_URL"),
         api_key=os.getenv("QDRANT_API_KEY"),
-        collection_name="nexusrag",
+        collection_name=COLLECTION_NAME,
+        batch_size=10
     )
 
-    return vector_store
-
-
-if __name__ == "__main__":
-    vector_store = create_vector_store(
-        "data/documents/OOPS Notes.pdf"
-    )
-
-    print("Documents successfully stored in Qdrant!")
+    return len(chunks)

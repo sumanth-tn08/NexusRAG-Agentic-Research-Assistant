@@ -31,9 +31,7 @@ def search_documents(question: str) -> str:
             None
         )
 
-        # Extract only the filename
-        source_name = source.split("\\")[-1]
-        source_name = source_name.split("/")[-1]
+    
 
         if page is not None:
             source_info = f"{source_name}, Page {page + 1}"
