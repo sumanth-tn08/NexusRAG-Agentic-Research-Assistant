@@ -1,14 +1,14 @@
-from app.rag.rag_chain import get_rag_chain
+from langchain_core.messages import HumanMessage
+
+from app.agent.graph import graph
 
 
 def main():
 
-    rag_chain = get_rag_chain()
-
     print("\n================================")
-    print("       NexusRAG Assistant")
+    print("       NexusRAG Agent")
     print("================================")
-    print("Ask questions about your documents.")
+    print("Ask questions or perform calculations.")
     print("Type 'exit' to quit.\n")
 
     while True:
@@ -16,61 +16,24 @@ def main():
         question = input("You: ")
 
         if question.lower() == "exit":
-            print("\nGoodbye!")
+            print("Goodbye!")
             break
 
-        try:
-
-            answer, documents = rag_chain(question)
-
-            print("\nNexusRAG:")
-            print(answer)
-
-            print("\nSources:")
-
-            seen_sources = set()
-
-            for document in documents:
-
-                source = document.metadata.get(
-                    "source",
-                    "Unknown"
-                )
-
-                page = document.metadata.get(
-                    "page",
-                    None
-                )
-
-                source_name = source.split("\\")[-1]
-                source_name = source_name.split("/")[-1]
-
-                source_key = (
-                    source_name,
-                    page
-                )
-
-                if source_key in seen_sources:
-                    continue
-
-                seen_sources.add(source_key)
-
-                if page is not None:
-                    print(
-                        f"  - {source_name}, "
-                        f"Page {page + 1}"
+        result = graph.invoke(
+            {
+                "messages": [
+                    HumanMessage(
+                        content=question
                     )
-                else:
-                    print(
-                        f"  - {source_name}"
-                    )
+                ]
+            }
+        )
 
-            print()
+        final_message = result["messages"][-1]
 
-        except Exception as e:
-
-            print("\nError:", e)
-            print()
+        print("\nNexusRAG:")
+        print(final_message.content)
+        print()
 
 
 if __name__ == "__main__":
