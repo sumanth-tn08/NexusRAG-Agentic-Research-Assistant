@@ -1,13 +1,10 @@
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 
 
 def get_embeddings():
-
-    embeddings = HuggingFaceEmbeddings(
+    return FastEmbedEmbeddings(
         model_name="BAAI/bge-small-en-v1.5"
     )
-
-    return embeddings
 
 
 if __name__ == "__main__":

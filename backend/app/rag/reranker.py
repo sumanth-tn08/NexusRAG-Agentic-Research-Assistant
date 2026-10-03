@@ -1,12 +1,11 @@
-from sentence_transformers import CrossEncoder
+from fastembed.rerank.cross_encoder import TextCrossEncoder
 
 
 class Reranker:
 
     def __init__(self):
-
-        self.model = CrossEncoder(
-            "BAAI/bge-reranker-base"
+        self.model = TextCrossEncoder(
+            model_name="Xenova/ms-marco-MiniLM-L-6-v2"
         )
 
     def rerank(
@@ -16,12 +15,17 @@ class Reranker:
         top_k: int = 5
     ):
 
-        pairs = [
-            [question, document.page_content]
+        texts = [
+            document.page_content
             for document in documents
         ]
 
-        scores = self.model.predict(pairs)
+        scores = list(
+            self.model.rerank(
+                question,
+                texts
+            )
+        )
 
         ranked = sorted(
             zip(documents, scores),
