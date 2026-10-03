@@ -21,9 +21,9 @@ def search_documents(question: str) -> str:
 
     for document in documents:
 
-        source = document.metadata.get(
-            "source",
-            "Unknown"
+        source_name = document.metadata.get(
+            "filename",
+            document.metadata.get("source", "Unknown")
         )
 
         page = document.metadata.get(
@@ -31,10 +31,10 @@ def search_documents(question: str) -> str:
             None
         )
 
-    
-
         if page is not None:
-            source_info = f"{source_name}, Page {page + 1}"
+            source_info = (
+                f"{source_name}, Page {page + 1}"
+            )
         else:
             source_info = source_name
 
@@ -45,14 +45,23 @@ def search_documents(question: str) -> str:
 
     return "\n\n".join(results)
 
-
 @tool
 def calculator(expression: str) -> str:
     """
     Calculate a mathematical expression.
-
     Use this tool for arithmetic calculations.
     """
+
+    allowed_characters = (
+        "0123456789"
+        "+-*/().% "
+    )
+
+    if any(
+        character not in allowed_characters
+        for character in expression
+    ):
+        return "Invalid mathematical expression."
 
     try:
 

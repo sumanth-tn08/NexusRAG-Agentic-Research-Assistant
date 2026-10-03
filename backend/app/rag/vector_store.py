@@ -21,9 +21,7 @@ def add_document_to_qdrant(
 
     chunks = load_and_split(file_path)
 
-    # Add application-level metadata
     for chunk in chunks:
-
         chunk.metadata["document_id"] = document_id
         chunk.metadata["filename"] = filename
 
@@ -34,7 +32,7 @@ def add_document_to_qdrant(
         embedding=embeddings,
         url=os.getenv("QDRANT_URL"),
         api_key=os.getenv("QDRANT_API_KEY"),
-        collection_name=COLLECTION_NAME,
+        collection_name="nexusrag",
         batch_size=10
     )
 
