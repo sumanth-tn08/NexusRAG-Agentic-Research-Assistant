@@ -1,9 +1,12 @@
 import axios from 'axios';
 import type { UploadedDocument, ChatRequest, ChatResponse } from '../types';
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 const api = axios.create({
-  baseURL: '/api',
-  timeout: 120000, // 2 mins for LLM / ingestion response
+  baseURL: API_BASE_URL,
+  timeout: 120000,
 });
 
 export const checkHealth = async (): Promise<boolean> => {
@@ -19,11 +22,15 @@ export const uploadDocument = async (file: File): Promise<UploadedDocument> => {
   const formData = new FormData();
   formData.append('file', file);
 
-  const res = await api.post<UploadedDocument & { message?: string }>('/upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const res = await api.post<UploadedDocument & { message?: string }>(
+    '/upload',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
 
   console.log('UPLOAD RESPONSE:', {
     document_id: res.data.document_id,
@@ -35,11 +42,18 @@ export const uploadDocument = async (file: File): Promise<UploadedDocument> => {
     document_id: res.data.document_id,
     filename: res.data.filename,
     chunks: res.data.chunks,
-    uploadedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    uploadedAt: new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
   };
 };
 
-export const sendChatMessage = async (question: string, sessionId: string, documentIds: string[]): Promise<ChatResponse> => {
+export const sendChatMessage = async (
+  question: string,
+  sessionId: string,
+  documentIds: string[]
+): Promise<ChatResponse> => {
   const payload: ChatRequest = {
     question,
     session_id: sessionId,
@@ -53,6 +67,7 @@ export const sendChatMessage = async (question: string, sessionId: string, docum
   });
 
   const res = await api.post<ChatResponse>('/chat', payload);
+
   return res.data;
 };
 
@@ -60,7 +75,6 @@ export const deleteSession = async (sessionId: string): Promise<void> => {
   await api.delete(`/sessions/${sessionId}`);
 };
 
-// Delete a document by ID
 export const deleteDocument = async (documentId: string): Promise<void> => {
   console.log('DELETE REQUEST:', {
     document_id: documentId,
@@ -68,4 +82,3 @@ export const deleteDocument = async (documentId: string): Promise<void> => {
 
   await api.delete(`/documents/${documentId}`);
 };
-
