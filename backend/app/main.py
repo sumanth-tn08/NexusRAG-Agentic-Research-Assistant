@@ -29,6 +29,22 @@ app = FastAPI(
     version="1.0.0"
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "https://nexus-rag-agentic-research-assistant.vercel.app",
+        "https://nexus-rag-agentic-research-assistant-nqfi5t3ai-sumanth4.vercel.app",
+        "https://nexus-rag-agentic-research-assistant-git-main-sumanth4.vercel.app",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class ChatRequest(BaseModel):
 
