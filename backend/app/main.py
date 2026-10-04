@@ -220,7 +220,7 @@ def remove_document(
             status_code=500,
             detail=str(e)
         )    
-  @app.get("/debug/qdrant")
+@app.get("/debug/qdrant")
 def debug_qdrant():
     import os
     from qdrant_client import QdrantClient
