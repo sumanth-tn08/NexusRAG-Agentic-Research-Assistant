@@ -112,7 +112,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       {!isConnected && (
         <div className="bg-red-950/60 border-b border-red-900/50 px-4 py-2 flex items-center justify-center space-x-2 text-xs text-red-200">
           <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-          <span>Unable to connect to NexusRAG backend at http://127.0.0.1:8000. Please ensure the backend server is running.</span>
+          <span>Unable to connect to NexusRAG backend. Please ensure the backend server is running.</span>
         </div>
       )}
 
