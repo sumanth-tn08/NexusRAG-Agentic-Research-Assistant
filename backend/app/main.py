@@ -220,3 +220,32 @@ def remove_document(
             status_code=500,
             detail=str(e)
         )    
+  @app.get("/debug/qdrant")
+def debug_qdrant():
+    import os
+    from qdrant_client import QdrantClient
+
+    url = os.getenv("QDRANT_URL")
+    key = os.getenv("QDRANT_API_KEY")
+
+    result = {
+        "url_configured": bool(url),
+        "key_configured": bool(key),
+    }
+
+    try:
+        client = QdrantClient(
+            url=url,
+            api_key=key
+        )
+
+        client.get_collections()
+
+        result["qdrant_connection"] = "OK"
+
+    except Exception as e:
+        result["qdrant_connection"] = "FAILED"
+        result["error_type"] = type(e).__name__
+        result["error"] = str(e)
+
+    return result      
