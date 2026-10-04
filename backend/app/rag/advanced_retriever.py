@@ -3,6 +3,10 @@ from app.rag.reranker import Reranker
 from app.rag.compressor import compress_documents
 
 
+# Load reranker once and reuse it
+reranker = Reranker()
+
+
 def retrieve_from_documents(
     question: str,
     document_ids: list[str]
@@ -15,8 +19,6 @@ def retrieve_from_documents(
 
     if not documents:
         return []
-
-    reranker = Reranker()
 
     documents = reranker.rerank(
         question,

@@ -2,7 +2,6 @@ from fastembed.rerank.cross_encoder import TextCrossEncoder
 
 
 class Reranker:
-
     def __init__(self):
         self.model = TextCrossEncoder(
             model_name="Xenova/ms-marco-MiniLM-L-6-v2"
@@ -14,17 +13,10 @@ class Reranker:
         documents: list,
         top_k: int = 5
     ):
-
-        texts = [
-            document.page_content
-            for document in documents
-        ]
+        texts = [document.page_content for document in documents]
 
         scores = list(
-            self.model.rerank(
-                question,
-                texts
-            )
+            self.model.rerank(question, texts)
         )
 
         ranked = sorted(
