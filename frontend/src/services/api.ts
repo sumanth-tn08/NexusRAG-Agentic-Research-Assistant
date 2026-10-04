@@ -1,11 +1,16 @@
 import axios from 'axios';
 import type { UploadedDocument, ChatRequest, ChatResponse } from '../types';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+// const API_BASE_URL =
+  // import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const API_URL = import.meta.env.VITE_API_URL;
 
+// const api = axios.create({
+//   baseURL: API_BASE_URL,
+//   timeout: 120000,
+// });
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
   timeout: 120000,
 });
 
