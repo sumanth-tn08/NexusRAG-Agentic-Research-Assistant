@@ -1,18 +1,23 @@
+import gc
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 def load_and_split(file_path: str):
-    
     loader = PyMuPDFLoader(file_path)
-    
     documents = loader.load()
     
+    # Safety page cap for free-tier 512MB RAM limit
+    if len(documents) > 50:
+        documents = documents[:50]
+    
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 1000,
-        chunk_overlap = 200
+        chunk_size=1000,
+        chunk_overlap=200
     )
    
     chunks = splitter.split_documents(documents)
+    del documents
+    gc.collect()
    
     return chunks
 

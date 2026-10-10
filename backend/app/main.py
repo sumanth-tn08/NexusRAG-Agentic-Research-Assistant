@@ -1,3 +1,5 @@
+import asyncio
+import gc
 import os
 import shutil
 import tempfile
@@ -173,8 +175,9 @@ async def upload_document(
                 temp_file
             )
 
-        # Process document
-        chunk_count = process_uploaded_file(
+        # Process document in worker thread so main event loop remains free to answer health checks
+        chunk_count = await asyncio.to_thread(
+            process_uploaded_file,
             file_path=temp_path,
             document_id=document_id,
             filename=file.filename
@@ -199,6 +202,8 @@ async def upload_document(
         if temp_path and os.path.exists(temp_path):
 
             os.remove(temp_path)
+
+        gc.collect()
 
 
 @app.delete(

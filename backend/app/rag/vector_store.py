@@ -13,23 +13,27 @@ from qdrant_client.models import (
 from app.rag.embeddings import get_embeddings
 from app.rag.ingestion import load_and_split
 
+from functools import lru_cache
+import gc
+
 load_dotenv()
 
 COLLECTION_NAME = "nexusrag"
 
 
+@lru_cache(maxsize=1)
 def get_qdrant_client():
     return QdrantClient(
         url=os.getenv("QDRANT_URL"),
         api_key=os.getenv("QDRANT_API_KEY"),
+        timeout=60,
     )
 
 
+@lru_cache(maxsize=1)
 def get_vector_store():
-    client = get_qdrant_client()
-
     return QdrantVectorStore(
-        client=client,
+        client=get_qdrant_client(),
         collection_name=COLLECTION_NAME,
         embedding=get_embeddings(),
     )
@@ -40,22 +44,30 @@ def add_document_to_qdrant(
     document_id: str,
     filename: str,
 ):
-    chunks = load_and_split(file_path)
-    if not chunks:
-        return 0
+    try:
+        chunks = load_and_split(file_path)
+        if not chunks:
+            return 0
 
-    for chunk in chunks:
-        chunk.metadata["document_id"] = document_id
-        chunk.metadata["filename"] = filename
+        # Safety cap to avoid exceeding Render's 512MB RAM limit
+        MAX_CHUNKS = 150
+        if len(chunks) > MAX_CHUNKS:
+            chunks = chunks[:MAX_CHUNKS]
 
-    vector_store = get_vector_store()
+        for chunk in chunks:
+            chunk.metadata["document_id"] = document_id
+            chunk.metadata["filename"] = filename
 
-    vector_store.add_documents(
-        documents=chunks,
-        batch_size=2
-    )
+        vector_store = get_vector_store()
 
-    return len(chunks)
+        vector_store.add_documents(
+            documents=chunks,
+            batch_size=16
+        )
+
+        return len(chunks)
+    finally:
+        gc.collect()
 
 
 def delete_document(
