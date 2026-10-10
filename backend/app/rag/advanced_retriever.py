@@ -12,3 +12,10 @@ def retrieve_from_documents(
     )
 
     return documents
+
+
+def advanced_retrieve(question: str):
+    from app.rag.search import similarity_search
+
+    results = similarity_search(question, k=4)
+    return [doc for doc, _ in results]

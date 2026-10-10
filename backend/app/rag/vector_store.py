@@ -41,6 +41,8 @@ def add_document_to_qdrant(
     filename: str,
 ):
     chunks = load_and_split(file_path)
+    if not chunks:
+        return 0
 
     for chunk in chunks:
         chunk.metadata["document_id"] = document_id
@@ -49,7 +51,8 @@ def add_document_to_qdrant(
     vector_store = get_vector_store()
 
     vector_store.add_documents(
-        documents=chunks
+        documents=chunks,
+        batch_size=2
     )
 
     return len(chunks)

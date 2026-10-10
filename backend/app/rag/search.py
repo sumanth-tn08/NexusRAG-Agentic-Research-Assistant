@@ -1,43 +1,60 @@
 import os
 
 from dotenv import load_dotenv
-from langchain_qdrant import QdrantVectorStore
-
-from app.rag.embeddings import get_embeddings
 from qdrant_client.models import (
     Filter,
     FieldCondition,
-    MatchAny
+    MatchAny,
+    MatchValue,
 )
+
+from app.rag.vector_store import get_vector_store
+
 load_dotenv()
 
-def get_vector_store():
-    
-    embeddings= get_embeddings()
-    
-    vector_store = QdrantVectorStore.from_existing_collection(
-        embedding=embeddings,
-        collection_name="nexusrag",
-        url=os.getenv("QDRANT_URL"),
-        api_key=os.getenv("QDRANT_API_KEY"), 
-    )
-    
-    return vector_store
 
-def similarity_search(question:str, k: int=4):
-    
+def search_by_documents(
+    question: str,
+    document_ids: list[str],
+    k: int = 4
+):
+    if not document_ids:
+        return []
+
     vector_store = get_vector_store()
-    
+
+    qdrant_filter = Filter(
+        must=[
+            FieldCondition(
+                key="metadata.document_id",
+                match=MatchAny(
+                    any=document_ids
+                )
+            )
+        ]
+    )
+
+    documents = vector_store.similarity_search(
+        query=question,
+        k=k,
+        filter=qdrant_filter
+    )
+
+    return documents
+
+
+def similarity_search(question: str, k: int = 4):
+    vector_store = get_vector_store()
+
     results = vector_store.similarity_search_with_score(
         question,
         k=k,
-        
     )
-    
+
     return results
 
-def mmr_search(question: str, k: int = 4):
 
+def mmr_search(question: str, k: int = 4):
     vector_store = get_vector_store()
 
     results = vector_store.max_marginal_relevance_search(
@@ -49,12 +66,12 @@ def mmr_search(question: str, k: int = 4):
 
     return results
 
+
 def filtered_search(
     question: str,
     source: str,
     k: int = 4
 ):
-
     vector_store = get_vector_store()
 
     qdrant_filter = Filter(
@@ -102,30 +119,4 @@ if __name__ == "__main__":
 
         print(f"\n--- Result {i} ---")
         print("Page:", document.metadata.get("page"))
-        print(document.page_content[:300])
-
-def search_by_documents(
-    question: str,
-    document_ids: list[str],
-    k: int = 6
-):
-    vector_store = get_vector_store()
-
-    qdrant_filter = Filter(
-        must=[
-            FieldCondition(
-                key="metadata.document_id",
-                match=MatchAny(
-                    any=document_ids
-                )
-            )
-        ]
-    )
-
-    documents = vector_store.similarity_search(
-        query=question,
-        k=k,
-        filter=qdrant_filter
-    )
-
-    return documents        
+        print(document.page_content[:300])        
