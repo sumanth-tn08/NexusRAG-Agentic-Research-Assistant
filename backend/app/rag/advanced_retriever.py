@@ -1,6 +1,5 @@
 from app.rag.search import search_by_documents
-from app.rag.reranker import rerank_documents
-from app.rag.compression import compress_documents
+from app.rag.reranker import Reranker
 
 
 def retrieve_from_documents(
@@ -10,7 +9,6 @@ def retrieve_from_documents(
     if not document_ids:
         return []
 
-    # Retrieve fewer candidates to reduce memory usage.
     documents = search_by_documents(
         question=question,
         document_ids=document_ids,
@@ -20,17 +18,12 @@ def retrieve_from_documents(
     if not documents:
         return []
 
-    # Rerank only the retrieved candidates.
-    documents = rerank_documents(
+    reranker = Reranker()
+
+    documents = reranker.rerank(
         question=question,
         documents=documents,
         top_k=3
-    )
-
-    # Compress the final results.
-    documents = compress_documents(
-        question,
-        documents
     )
 
     return documents

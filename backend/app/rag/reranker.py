@@ -1,5 +1,4 @@
 from functools import lru_cache
-
 from fastembed.rerank.cross_encoder import TextCrossEncoder
 
 
@@ -10,32 +9,38 @@ def get_reranker():
     )
 
 
-def rerank_documents(
-    question: str,
-    documents: list,
-    top_k: int = 3
-):
-    if not documents:
-        return []
+class Reranker:
 
-    model = get_reranker()
+    def rerank(
+        self,
+        question: str,
+        documents: list,
+        top_k: int = 3
+    ):
+        if not documents:
+            return []
 
-    texts = [document.page_content for document in documents]
+        model = get_reranker()
 
-    scores = list(
-        model.rerank(
-            question,
-            texts
+        texts = [
+            document.page_content
+            for document in documents
+        ]
+
+        scores = list(
+            model.rerank(
+                question,
+                texts
+            )
         )
-    )
 
-    ranked = sorted(
-        zip(documents, scores),
-        key=lambda x: x[1],
-        reverse=True
-    )
+        ranked = sorted(
+            zip(documents, scores),
+            key=lambda x: x[1],
+            reverse=True
+        )
 
-    return [
-        document
-        for document, score in ranked[:top_k]
-    ]
+        return [
+            document
+            for document, score in ranked[:top_k]
+        ]
