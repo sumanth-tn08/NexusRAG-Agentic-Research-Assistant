@@ -13,6 +13,7 @@ def get_retriever():
         embedding=embeddings,
         url=os.getenv("QDRANT_URL"),
         api_key=os.getenv("QDRANT_API_KEY"),
+        batch_size=2
     )
     
     retriever = vector_store.as_retriever(
