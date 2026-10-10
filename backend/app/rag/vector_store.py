@@ -47,7 +47,7 @@ def add_document_to_qdrant(
     try:
         chunks = load_and_split(file_path)
         if not chunks:
-            return 0
+            raise ValueError(f"Could not extract any readable text from '{filename}'. If this is a scanned image, please upload a text-based PDF.")
 
         # Safety cap to avoid exceeding Render's 512MB RAM limit
         MAX_CHUNKS = 150

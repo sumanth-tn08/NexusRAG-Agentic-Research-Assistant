@@ -29,7 +29,8 @@ export const uploadDocument = async (file: File): Promise<UploadedDocument> => {
 
   const res = await api.post<UploadedDocument & { message?: string }>(
     '/upload',
-    formData
+    formData,
+    { timeout: 180000 }
   );
 
   console.log('UPLOAD RESPONSE:', {

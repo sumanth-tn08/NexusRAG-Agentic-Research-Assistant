@@ -162,6 +162,8 @@ async def upload_document(
             uuid.uuid4()
         )
 
+        await file.seek(0)
+
         # Create temporary file
         with tempfile.NamedTemporaryFile(
             delete=False,
@@ -190,11 +192,17 @@ async def upload_document(
             "chunks": chunk_count
         }
 
+    except HTTPException:
+        raise
+
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"=== UPLOAD ERROR FOR {file.filename}: {e} ===", flush=True)
 
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail=f"Processing error: {str(e)}"
         )
 
     finally:

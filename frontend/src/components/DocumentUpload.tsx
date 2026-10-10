@@ -55,14 +55,19 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         setStatus('idle');
       }, 3500);
     } catch (err: any) {
+      console.error('Upload failed with error:', err);
+      const detail =
+        err.response?.data?.detail ||
+        (typeof err.response?.data === 'string' && err.response.data.length < 150 ? err.response.data : null) ||
+        (err.response?.status ? `Server returned HTTP ${err.response.status}` : null) ||
+        err.message ||
+        'Upload failed. Please try again.';
       setStatus('error');
-      setErrorMessage(
-        err.response?.data?.detail || 'Upload failed. Please try again.'
-      );
+      setErrorMessage(detail);
       setTimeout(() => {
         setStatus((prev) => (prev === 'error' ? 'idle' : prev));
         setErrorMessage(null);
-      }, 6000);
+      }, 8000);
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
