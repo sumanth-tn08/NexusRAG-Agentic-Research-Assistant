@@ -1,15 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, CornerDownLeft } from 'lucide-react';
+import type { ConnectionStatus } from '../types';
 
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
   disabled?: boolean;
+  connectionStatus?: ConnectionStatus;
   isBackendConnected?: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,
   disabled = false,
+  connectionStatus,
   isBackendConnected = true,
 }) => {
   const [input, setInput] = useState('');
@@ -43,6 +46,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
+  const isOffline = connectionStatus === 'disconnected' || (!connectionStatus && isBackendConnected === false);
+  const isConnecting = connectionStatus === 'waking' || connectionStatus === 'checking';
+
   return (
     <div className="relative w-full max-w-4xl mx-auto">
       <form onSubmit={handleSubmit} className="relative flex items-end">
@@ -55,9 +61,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             onKeyDown={handleKeyDown}
             disabled={disabled}
             placeholder={
-              isBackendConnected
-                ? 'Ask NexusRAG about your documents... (Press Enter to send, Shift+Enter for new line)'
-                : 'Backend is offline. Please check connection...'
+              isConnecting
+                ? 'Connecting to backend... (waking up free-tier server)'
+                : isOffline
+                ? 'Backend is offline. Please check connection...'
+                : 'Ask NexusRAG about your documents... (Press Enter to send, Shift+Enter for new line)'
             }
             className="w-full resize-none bg-transparent px-4 py-3.5 pr-14 text-sm text-slate-100 placeholder-slate-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed max-h-44"
           />

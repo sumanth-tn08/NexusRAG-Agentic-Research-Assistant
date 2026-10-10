@@ -3,7 +3,7 @@ import type { UploadedDocument, ChatRequest, ChatResponse } from '../types';
 
 // const API_BASE_URL =
   // import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 // const api = axios.create({
 //   baseURL: API_BASE_URL,
@@ -16,7 +16,7 @@ const api = axios.create({
 
 export const checkHealth = async (): Promise<boolean> => {
   try {
-    const res = await api.get('/health');
+    const res = await api.get('/health', { timeout: 15000 });
     return res.status === 200;
   } catch {
     return false;
@@ -29,12 +29,7 @@ export const uploadDocument = async (file: File): Promise<UploadedDocument> => {
 
   const res = await api.post<UploadedDocument & { message?: string }>(
     '/upload',
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
+    formData
   );
 
   console.log('UPLOAD RESPONSE:', {

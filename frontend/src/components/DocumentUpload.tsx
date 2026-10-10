@@ -59,6 +59,10 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       setErrorMessage(
         err.response?.data?.detail || 'Upload failed. Please try again.'
       );
+      setTimeout(() => {
+        setStatus((prev) => (prev === 'error' ? 'idle' : prev));
+        setErrorMessage(null);
+      }, 6000);
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';

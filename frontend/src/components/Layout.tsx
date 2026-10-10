@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './Sidebar';
 import ChatWindow from './ChatWindow';
 import { checkHealth, sendChatMessage, deleteSession, deleteDocument } from '../services/api';
-import type { UploadedDocument, ChatMessage as ChatMessageType } from '../types';
+import type { UploadedDocument, ChatMessage as ChatMessageType, ConnectionStatus } from '../types';
 
 const SESSION_STORAGE_KEY = 'nexusrag_session_id';
 
@@ -20,28 +20,41 @@ export const Layout: React.FC = () => {
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('checking');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+
+  const failureCountRef = useRef(0);
+  const isMountedRef = useRef(true);
+
+  const verifyBackend = useCallback(async () => {
+    const healthy = await checkHealth();
+    if (!isMountedRef.current) return;
+
+    if (healthy) {
+      failureCountRef.current = 0;
+      setConnectionStatus('connected');
+    } else {
+      failureCountRef.current += 1;
+      // Allow up to 2 failed checks while Render is spinning up cold start (~30-50s)
+      if (failureCountRef.current <= 2) {
+        setConnectionStatus('waking');
+      } else {
+        setConnectionStatus('disconnected');
+      }
+    }
+  }, []);
 
   // Health check on mount and interval
   useEffect(() => {
-    let isMounted = true;
-
-    const verifyBackend = async () => {
-      const healthy = await checkHealth();
-      if (isMounted) {
-        setIsConnected(healthy);
-      }
-    };
-
+    isMountedRef.current = true;
     verifyBackend();
     const interval = setInterval(verifyBackend, 10000);
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [verifyBackend]);
 
   // Debug logging for state consistency
   useEffect(() => {
@@ -162,6 +175,9 @@ export const Layout: React.FC = () => {
   // Documents currently selected for searching (used for UI indicator)
   const selectedDocuments = documents.filter((doc) => selectedDocumentIds.includes(doc.document_id));
 
+  const isConnected = connectionStatus === 'connected';
+  const canAttemptUpload = connectionStatus !== 'disconnected';
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#0b0f19]">
       <Sidebar
@@ -169,7 +185,7 @@ export const Layout: React.FC = () => {
         onUploadSuccess={handleUploadSuccess}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        isBackendConnected={isConnected}
+        isBackendConnected={canAttemptUpload}
         selectedIds={selectedDocumentIds}
         onToggleSelect={handleToggleSelect}
         onDelete={handleDeleteDocument}
@@ -179,6 +195,8 @@ export const Layout: React.FC = () => {
         messages={messages}
         isLoading={isLoading}
         isConnected={isConnected}
+        connectionStatus={connectionStatus}
+        onRetryConnection={verifyBackend}
         onSendMessage={handleSendMessage}
         onNewChat={handleNewChat}
         onClearChat={handleClearChat}

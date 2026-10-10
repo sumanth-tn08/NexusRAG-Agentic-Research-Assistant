@@ -34,12 +34,17 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:5174",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "https://nexus-rag-agentic-research-assistan.vercel.app",
         "https://nexus-rag-agentic-research-assistant.vercel.app",
         "https://nexus-rag-agentic-research-assistant-git-main-sumanth4.vercel.app",
     ],
-    allow_origin_regex=r"https://nexus-rag-agentic-research-assistant-[a-z0-9]+-sumanth4\.vercel\.app",
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -28,3 +28,5 @@ export interface ChatMessage {
   sources?: Source[];
   timestamp: string;
 }
+
+export type ConnectionStatus = 'checking' | 'connected' | 'waking' | 'disconnected';

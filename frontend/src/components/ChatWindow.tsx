@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import type { UploadedDocument } from '../types';
+import type { UploadedDocument, ConnectionStatus, ChatMessage as ChatMessageType } from '../types';
 import { Menu, PlusCircle, Trash2, Bot, Sparkles, ShieldCheck, AlertCircle } from 'lucide-react';
-import type { ChatMessage as ChatMessageType } from '../types';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import LoadingIndicator from './LoadingIndicator';
@@ -9,7 +8,9 @@ import LoadingIndicator from './LoadingIndicator';
 interface ChatWindowProps {
   messages: ChatMessageType[];
   isLoading: boolean;
-  isConnected: boolean;
+  isConnected?: boolean;
+  connectionStatus: ConnectionStatus;
+  onRetryConnection?: () => void;
   onSendMessage: (content: string) => void;
   onNewChat: () => void;
   onClearChat: () => void;
@@ -22,6 +23,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   messages,
   isLoading,
   isConnected,
+  connectionStatus,
+  onRetryConnection,
   onSendMessage,
   onNewChat,
   onClearChat,
@@ -35,6 +38,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   useEffect(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
+
+  const isActuallyConnected = connectionStatus === 'connected' || (isConnected && connectionStatus !== 'disconnected');
+  const isConnecting = connectionStatus === 'waking' || connectionStatus === 'checking';
 
   return (
     <main className="flex-1 flex flex-col h-full bg-[#0b0f19] text-slate-100 overflow-hidden relative">
@@ -60,13 +66,27 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
               <div className="flex items-center space-x-1.5">
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    isConnected
+                    isActuallyConnected
                       ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)] animate-pulse'
+                      : isConnecting
+                      ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)] animate-pulse'
                       : 'bg-red-500'
                   }`}
                 />
-                <span className={`text-[11px] font-medium ${isConnected ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {isConnected ? 'Connected' : 'Backend Disconnected'}
+                <span
+                  className={`text-[11px] font-medium ${
+                    isActuallyConnected
+                      ? 'text-emerald-400'
+                      : isConnecting
+                      ? 'text-amber-400'
+                      : 'text-red-400'
+                  }`}
+                >
+                  {isActuallyConnected
+                    ? 'Connected'
+                    : isConnecting
+                    ? 'Connecting (Waking up...)'
+                    : 'Backend Disconnected'}
                 </span>
               </div>
               <span className="text-slate-600 text-[10px]">•</span>
@@ -108,11 +128,27 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </header>
 
+      {/* Backend Waking Banner */}
+      {isConnecting && (
+        <div className="bg-amber-950/60 border-b border-amber-900/50 px-4 py-2 flex items-center justify-center space-x-2 text-xs text-amber-200 animate-fade-in">
+          <div className="w-3.5 h-3.5 border-2 border-amber-400/40 border-t-amber-400 rounded-full animate-spin flex-shrink-0" />
+          <span>Connecting to backend (if waking from free-tier sleep, this may take ~30-50s)...</span>
+        </div>
+      )}
+
       {/* Backend Offline Banner */}
-      {!isConnected && (
+      {connectionStatus === 'disconnected' && (
         <div className="bg-red-950/60 border-b border-red-900/50 px-4 py-2 flex items-center justify-center space-x-2 text-xs text-red-200">
           <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
           <span>Unable to connect to NexusRAG backend. Please ensure the backend server is running.</span>
+          {onRetryConnection && (
+            <button
+              onClick={onRetryConnection}
+              className="ml-2 underline text-red-300 hover:text-white cursor-pointer font-medium"
+            >
+              Retry
+            </button>
+          )}
         </div>
       )}
 
@@ -177,7 +213,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <ChatInput
           onSendMessage={onSendMessage}
           disabled={isLoading}
-          isBackendConnected={isConnected}
+          connectionStatus={connectionStatus}
+          isBackendConnected={isActuallyConnected}
         />
       </footer>
     </main>
